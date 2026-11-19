@@ -1,0 +1,55 @@
+name: Publish Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Get version from plugin.json
+        id: version
+        uses: notiz-dev/github-action-json-property@release
+        with:
+          path: "plugin.json"
+          prop_path: "Version"
+
+      - name: Install dependencies into lib/
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -t ./lib
+
+      - name: Ensure main.py finds lib
+        run: |
+          # sys.path already includes lib in main.py
+          test -f main.py
+          test -f plugin.json
+
+      - name: Zip plugin
+        run: |
+          zip -r Flow.Launcher.Plugin.AlwaysOnTop.zip . \
+            -x "*.git*" \
+            -x ".github/*" \
+            -x "*.pyc" \
+            -x "*__pycache__*" \
+            -x "*.zip"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Flow.Launcher.Plugin.AlwaysOnTop.zip
+          tag_name: "v${{ steps.version.outputs.prop }}"
+          name: "v${{ steps.version.outputs.prop }}"
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
