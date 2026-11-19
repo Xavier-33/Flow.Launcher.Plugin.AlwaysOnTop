@@ -41,10 +41,10 @@ jobs:
       - name: Zip plugin
         run: |
           zip -r Flow.Launcher.Plugin.AlwaysOnTop.zip . \
-            -x "*.git*" \
+            -x ".git*" \
             -x ".github/*" \
             -x "*.pyc" \
-            -x "*__pycache__*" \
+            -x "*__pycache__/*" \
             -x "*.zip"
 
       - name: Publish GitHub Release
